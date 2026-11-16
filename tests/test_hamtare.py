@@ -175,3 +175,29 @@ def test_cli_hamta_avbryter_med_exitkod_1_vid_otaggad_fil(setup, monkeypatch, tm
     assert cli.main(["--config", "x", "retag"]) == 0  # torrkörning ändrar inget
     assert (out / "2026-07-02 - Torsdagsdeppens stora gräv.mp3").exists()
     assert not (out / "cover.jpg").exists()
+
+
+def test_cli_hamta_spärrar_utan_state_och_utan_mapp(setup, monkeypatch):
+    cfg, show, out = setup
+    monkeypatch.setattr(cli.feed, "fetch", lambda *a, **k: FEED_XML)
+    monkeypatch.setattr(cli.config, "load", lambda _p: cfg)
+    hamtade = []
+    monkeypatch.setattr(execute, "_download", lambda url, *a: hamtade.append(url))
+    # Tom mapp utan state: utan spärren skulle alla tre avsnitt hämtas.
+    assert cli.main(["--config", "x", "hamta"]) == 1 and hamtade == []
+    out.rmdir()
+    assert cli.main(["--config", "x", "retag", "--apply"]) == 1
+    assert not out.exists() and not (cfg.state_dir / "t.json").exists()
+
+
+def test_retag_apply_pa_tom_mapp_skapar_state_sa_hamta_far_kora(setup, monkeypatch):
+    cfg, show, out = setup
+    monkeypatch.setattr(cli.feed, "fetch", lambda *a, **k: FEED_XML)
+    monkeypatch.setattr(cli.config, "load", lambda _p: cfg)
+    monkeypatch.setattr(execute.cover, "jpeg", lambda *a, **k: b"\xff\xd8")
+    assert cli.main(["--config", "x", "retag", "--apply"]) == 0
+    assert (cfg.state_dir / "t.json").exists()
+    hamtade = []
+    monkeypatch.setattr(execute, "_download", lambda url, part, ua: (hamtade.append(url), shutil.copyfile(DATA / "tyst.mp3", part)))
+    assert cli.main(["--config", "x", "hamta", "--limit", "1"]) == 0
+    assert hamtade == ["https://ljud.example/a.mp3"]

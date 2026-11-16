@@ -33,11 +33,14 @@ hamtare/
   cover.py          hämtar och skalar omslag, cache i STATE_DIR/covers
   lock.py           flock så schema och manuell körning inte krockar
 tests/              pytest, tests/data/tyst.mp3 är en 2 s tyst fixtur
+.githooks/pre-push  ruff + pytest (git config core.hooksPath .githooks)
 Dockerfile, entrypoint.sh, .github/workflows/docker-publish.yml
 ```
 
 ## Designbeslut
 
+- **Spärrar i `hamta`:** vägrar utan state-fil (kör `retag --apply` först) och
+  utan målmapp, så en felstavad montering inte ger 47 nya hämtningar.
 - **Filer känns igen på `TXXX:PODCAST_GUID`.** `hamta` vägrar köra om mappen har
   mp3:or utan den taggen, annars hämtas avsnitten en gång till. Gamla filer tas
   in med `retag`, som matchar på datum (±1 dygn, Flexget tog datumet i UTC) och
@@ -69,7 +72,8 @@ Dockerfile, entrypoint.sh, .github/workflows/docker-publish.yml
 
 `CONFIG_PATH` (default `config.yaml`, i containern `/state/config.yaml`),
 `STATE_DIR` (`/state`), `CRON_SCHEDULE` (`30 */3 * * *`), `TZ`
-(`Europe/Stockholm`), `PUID`/`PGID` (99/100), `RUN_ONCE`.
+(`Europe/Stockholm`), `PUID`/`PGID` (99/100), `RUN_ONCE`, `RETAG_ON_START`
+(`dry`/`apply`: kör `retag` före schemat, för övertagande via dockyard-PATCH).
 
 ## Vanliga ändringar
 

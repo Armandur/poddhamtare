@@ -38,14 +38,22 @@ Image: `ghcr.io/armandur/poddhamtare:latest`. Ingen port.
 | `CRON_SCHEDULE` | `30 */3 * * *` |
 | `PUID` / `PGID` | `99` / `100` |
 
+| `RETAG_ON_START` | tomt i drift. `dry` eller `apply` vid övertagandet, se nedan |
+
 Containern kopierar standardkonfigen till `/state/config.yaml` vid första
-start. Post-arguments styr läget: tomt ger schemat, `retag` ger en
-torrkörning och `retag --apply` gör den skarpa omtaggningen.
+start. Den startar alltid i schemaläget. `hamta` vägrar köra tills
+`retag --apply` har skapat state, så en felstavad montering ger inga
+massnedladdningar.
 
 ### Övertagande från Flexget
 
-1. Kör containern med post-argument `retag` och läs loggen.
-2. Stäng av Flexget-tasken `Torsdagsdeppen` i `config.yml`.
-3. Kör `retag --apply`. Ta sedan bort post-argumentet, så startar schemat.
-4. Efter Airsonics skanning kl. 03:00: kontrollera i DSub och uppdatera vyn
-   om den visar gamla titlar.
+Dockyard kan inte sätta post-argument. Övertagandet styrs därför med env
+`RETAG_ON_START`, som dockyard kan ändra med PATCH.
+
+1. Skapa containern med `RETAG_ON_START=dry`. Loggen ska visa 47 `TAGGA`.
+   Står det 47 `SAKNAS` är monteringen fel.
+2. Stäng av Flexget-tasken `Torsdagsdeppen` i Flexgets `config.yml`.
+3. Sätt `RETAG_ON_START=apply`, som startar om containern. Den taggar om
+   och byter namn på filerna. Töm sedan variabeln.
+4. Efter Airsonics skanning kl. 03:00, eller en manuell skanning: kontrollera
+   i DSub och uppdatera vyn om den visar gamla titlar.

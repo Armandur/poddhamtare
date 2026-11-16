@@ -37,14 +37,12 @@ def ensure_folder_cover(show, cfg, feed, state, *, dry_run):
 def run(plan, show, cfg, *, allow_download, limit=None):
     """-> (antal utförda, antal fel). Ett fel stoppar inte resten av planen."""
     done = failed = downloads = 0
-    show.output_dir.mkdir(parents=True, exist_ok=True)
     for action in plan.actions:
         if action.kind == "hamta":
             if not allow_download:
                 continue
             if limit is not None and downloads >= limit:
-                log.info("Gränsen på %d hämtningar nådd, resten tas nästa körning", limit)
-                break
+                continue
             downloads += 1
         try:
             _apply(action, show, cfg)

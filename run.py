@@ -25,8 +25,17 @@ log = logging.getLogger("poddhamtare")
 def run_show(show, cfg, *, mode, dry_run, limit=None):
     """-> True om showen gick igenom utan problem eller fel."""
     log.info("== %s ==", show.name)
+    state_path = cfg.state_dir / f"{show.slug}.json"
+    if not show.output_dir.is_dir():
+        log.error("PROBLEM Mappen finns inte: %s. Kontrollera monteringen.", show.output_dir)
+        return False
+    if mode == "hamta" and not state_path.exists():
+        # Spärr: utan state vet vi inte vilka avsnitt som redan finns. Tom mapp
+        # efter en felstavad montering skulle annars ge 47 nya hämtningar.
+        log.error("PROBLEM Ingen state för %s. Kör 'retag --apply' först.", show.name)
+        return False
     f = feed.parse(feed.fetch(show.feed_url, cfg.user_agent))
-    state = State(cfg.state_dir / f"{show.slug}.json")
+    state = State(state_path)
     state.assign_numbers(f.episodes)
     wanted = plan.desired(show, cfg, f, state)
     by_guid, untagged, problems = plan.scan(show.output_dir)
