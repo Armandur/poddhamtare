@@ -14,6 +14,7 @@ COPY run.py config.yaml entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
 ENV TZ=Europe/Stockholm \
+    PYTHONUNBUFFERED=1 \
     CONFIG_PATH=/state/config.yaml \
     STATE_DIR=/state \
     CRON_SCHEDULE="30 */3 * * *"

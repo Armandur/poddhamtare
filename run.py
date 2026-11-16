@@ -114,8 +114,9 @@ def main(argv=None):
     sub.add_parser("schema", help="kör 'hamta' enligt CRON_SCHEDULE")
     args = ap.parse_args(argv)
 
+    # stdout, inte stderr: Unraid-API:ts containerlogg visar bara stdout.
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
+                        datefmt="%Y-%m-%d %H:%M:%S", stream=sys.stdout)
     cfg = config.load(args.config)
     if args.cmd == "schema":
         schedule(cfg)
