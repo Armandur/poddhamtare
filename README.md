@@ -37,7 +37,6 @@ Image: `ghcr.io/armandur/poddhamtare:latest`. Ingen port.
 | `TZ` | `Europe/Stockholm` |
 | `CRON_SCHEDULE` | `30 */3 * * *` |
 | `PUID` / `PGID` | `99` / `100` |
-
 | `RETAG_ON_START` | tomt i drift. `dry` eller `apply` vid övertagandet, se nedan |
 
 Containern kopierar standardkonfigen till `/state/config.yaml` vid första
