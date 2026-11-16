@@ -1,0 +1,14 @@
+# Konfig för poddhamtare. Vid deploy: /state/config.yaml (env CONFIG_PATH).
+defaults:
+  user_agent: "poddhamtare/1.0"
+  number_padding: 4          # '0045 - Titel', som kafferepet-dl
+  cover_size: 1000           # omslag skalas ned till högst så här många pixlar
+  min_duration_ratio: 0.9    # hämtad fil måste vara minst så här lång jämfört med flödet
+
+shows:
+  - name: "Torsdagsdeppen"
+    slug: "torsdagsdeppen"
+    feed_url: "https://feeds.acast.com/public/shows/690e68a1a17ebcde889789b9"
+    output_dir: "/podcasts/torsdagsdeppen"
+    album: "Torsdagsdeppen"
+    artist: "Kyrkans Tidning"
