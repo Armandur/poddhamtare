@@ -15,12 +15,13 @@ backlog memory i projektet `poddhamtare` (besluten från beslutsvyn 2026-11-16).
 ## Stack
 
 Python 3.12, `mutagen` (ID3), `httpx`, `Pillow` (omslag), `PyYAML`, `croniter`.
-Ingen webb-UI, ingen databas. Docker-image `ghcr.io/armandur/poddhamtare`.
+Webbgränssnitt med FastAPI, Jinja2 och vanilla JS i kafferepet-dl:s stil.
+Ingen databas. Docker-image `ghcr.io/armandur/poddhamtare`.
 
 ## Filstruktur
 
 ```
-run.py              CLI: hamta | retag | schema. Lås, loggning, exitkod
+run.py              CLI: hamta | retag. Lås, loggning, exitkod, SIGTERM
 config.yaml         standardkonfig (vid deploy: /state/config.yaml)
 hamtare/
   config.py         config.yaml -> Config/Show
@@ -32,6 +33,12 @@ hamtare/
   tagging.py        skriver alla ID3-ramar på nytt, läser guid och fingeravtryck
   cover.py          hämtar och skalar omslag, cache i STATE_DIR/covers
   lock.py           flock så schema och manuell körning inte krockar
+app/                webbgränssnittet, kör som uvicorn i containern
+  main.py           app, lifespan, routes (/, /api/status|episodes|runs|run|events)
+  jobs.py           Runner: run.py som underprocess, en i taget, SSE, STATE_DIR/runs/
+  scheduler.py      startar 'hamta' enligt CRON_SCHEDULE via Runner
+  episodes.py       avsnittslista: flöde mot mapp, bara läsning, cache 5 min
+  templates/, static/  index.html, app.js, style.css (?v=hash mot cache)
 tests/              pytest, tests/data/tyst.mp3 är en 2 s tyst fixtur
 .githooks/pre-push  ruff + pytest (git config core.hooksPath .githooks)
 Dockerfile, entrypoint.sh, .github/workflows/docker-publish.yml
@@ -58,7 +65,17 @@ Dockerfile, entrypoint.sh, .github/workflows/docker-publish.yml
   `os.replace`. Airsonic och podderi ser aldrig en halv fil. Ljudet rörs inte.
 - **Omslag:** `cover.jpg` (kanalbilden) i mappen för Airsonic, plus `APIC` per
   avsnitt, nedskalat till 1000 px.
-- **SIGTERM** i schemaläget ger `sys.exit`, annars väntar `docker stop` (PID 1).
+- **Webbgränssnittet kör allt via run.py som underprocess.** Schemat och knappen
+  går genom samma `Runner`, så varje körning hamnar i `STATE_DIR/runs/<id>.json`
+  med full logg (100 sparas). Raderna går också till containerloggen.
+- **Webbprocessen skriver aldrig state.** Avsnittslistan delar ut löpnummer bara
+  i minnet. En sparning därifrån kunde krocka med en körning.
+- **Knappen startar bara** `hamta`, `hamta --dry-run` och `retag` (torr).
+  `POST /api/run` kräver JSON, så ett formulär på en annan sajt kan inte starta
+  något. Ingen inloggning: sidan nås bara i hemnätet.
+- **SIGTERM:** uvicorn är PID 1. Vid stopp skickar lifespan SIGTERM till run.py,
+  som avslutar med `sys.exit` så att `finally` städar `.part`-filen.
+- **`--no-access-log`:** inga klientadresser i containerloggen.
 
 ## Fakta om omgivningen
 
@@ -71,7 +88,7 @@ Dockerfile, entrypoint.sh, .github/workflows/docker-publish.yml
 ## Miljövariabler
 
 `CONFIG_PATH` (default `config.yaml`, i containern `/state/config.yaml`),
-`STATE_DIR` (`/state`), `CRON_SCHEDULE` (`30 */3 * * *`), `TZ`
+`STATE_DIR` (`/state`), `CRON_SCHEDULE` (`30 */3 * * *`), `WEBUI_PORT` (8000), `TZ`
 (`Europe/Stockholm`), `PUID`/`PGID` (99/100), `RUN_ONCE`, `RETAG_ON_START`
 (`dry`/`apply`: kör `retag` före schemat, för övertagande via dockyard-PATCH).
 

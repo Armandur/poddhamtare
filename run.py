@@ -2,18 +2,14 @@
 
   python run.py hamta [--dry-run] [--limit N]   hämta nya avsnitt, tagga om ändrade
   python run.py retag [--apply]                 matcha gamla filer och tagga om (torrkörning utan --apply)
-  python run.py schema                          kör 'hamta' enligt CRON_SCHEDULE
+
+Schemat och webbgränssnittet ligger i app/ och startar run.py som underprocess.
 """
 import argparse
 import logging
 import os
 import signal
 import sys
-import time
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-from croniter import croniter
 
 from hamtare import config, execute, feed, plan
 from hamtare.lock import Lock
@@ -84,24 +80,6 @@ def run_all(cfg, **kw):
     return ok
 
 
-def schedule(cfg):
-    # PID 1 i containern får ingen standardhanterare för SIGTERM. Utan den här
-    # väntar 'docker stop' tills timeouten. SystemExit kör finally-blocken,
-    # så en halv .part-fil städas bort.
-    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
-    expr = os.environ.get("CRON_SCHEDULE", "30 */3 * * *")
-    tz = ZoneInfo(os.environ.get("TZ", "Europe/Stockholm"))
-    log.info("Schema %r, tidszon %s", expr, tz)
-    while True:
-        nxt = croniter(expr, datetime.now(tz)).get_next(datetime)
-        log.info("Nästa körning %s", nxt.strftime("%Y-%m-%d %H:%M"))
-        time.sleep(max(0.0, (nxt - datetime.now(tz)).total_seconds()))
-        try:
-            run_all(cfg, mode="hamta", dry_run=False)
-        except BlockingIOError:
-            log.warning("En annan körning pågår, hoppar över den här")
-
-
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Hämtar poddar ur RSS och taggar filerna ur flödet.")
     ap.add_argument("--config", default=os.environ.get("CONFIG_PATH", "config.yaml"))
@@ -111,20 +89,24 @@ def main(argv=None):
     h.add_argument("--limit", type=int, help="högst så här många hämtningar per show")
     r = sub.add_parser("retag", help="matcha gamla filer och tagga om dem")
     r.add_argument("--apply", action="store_true", help="utan den blir det en torrkörning")
-    sub.add_parser("schema", help="kör 'hamta' enligt CRON_SCHEDULE")
     args = ap.parse_args(argv)
 
     # stdout, inte stderr: Unraid-API:ts containerlogg visar bara stdout.
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S", stream=sys.stdout)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    # SIGTERM från webbprocessen eller 'docker stop' ska köra finally-blocken,
+    # så att en halv .part-fil städas bort.
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
     cfg = config.load(args.config)
-    if args.cmd == "schema":
-        schedule(cfg)
-        return 0
-    if args.cmd == "hamta":
-        ok = run_all(cfg, mode="hamta", dry_run=args.dry_run, limit=args.limit)
-    else:
-        ok = run_all(cfg, mode="retag", dry_run=not args.apply)
+    try:
+        if args.cmd == "hamta":
+            ok = run_all(cfg, mode="hamta", dry_run=args.dry_run, limit=args.limit)
+        else:
+            ok = run_all(cfg, mode="retag", dry_run=not args.apply)
+    except BlockingIOError:
+        log.warning("En annan körning pågår, försök igen när den är klar")
+        return 1
     return 0 if ok else 1
 
 

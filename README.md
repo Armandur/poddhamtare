@@ -19,13 +19,22 @@ STATE_DIR=./tmp/state .venv/bin/python run.py --config config.yaml hamta --dry-r
 |---|---|
 | `hamta [--dry-run] [--limit N]` | hämtar nya avsnitt och taggar om filer där flödet ändrats |
 | `retag [--apply]` | tar in gamla filer utan guid-tagg: matchar, taggar om och byter namn. Utan `--apply` blir det en torrkörning |
-| `schema` | kör `hamta` enligt `CRON_SCHEDULE` |
+
+Webbgränssnittet lokalt: `CRON_SCHEDULE='0 0 1 1 *' .venv/bin/uvicorn app.main:app --port PORT`.
 
 Filnamn: `ÅÅÅÅ-MM-DD - 0045 - Titel.mp3`. Titeltagg: `0045 - Titel`.
 
 ## Deploy på Unraid (TERVO2)
 
-Image: `ghcr.io/armandur/poddhamtare:latest`. Ingen port.
+Image: `ghcr.io/armandur/poddhamtare:latest`.
+
+Webbgränssnittet visar schema, avsnitt, körningshistorik med logg och en
+livelogg. Knappen "Kör" startar en hämtning eller en torrkörning. Sidan har
+ingen inloggning, så exponera den inte utanför hemnätet.
+
+| Port i containern | Host |
+|---|---|
+| `8000` | valfri ledig port |
 
 | Container | Host | Läge |
 |---|---|---|
@@ -40,7 +49,7 @@ Image: `ghcr.io/armandur/poddhamtare:latest`. Ingen port.
 | `RETAG_ON_START` | tomt i drift. `dry` eller `apply` vid övertagandet, se nedan |
 
 Containern kopierar standardkonfigen till `/state/config.yaml` vid första
-start. Den startar alltid i schemaläget. `hamta` vägrar köra tills
+start. Den startar alltid webbgränssnittet, som också kör schemat. `hamta` vägrar köra tills
 `retag --apply` har skapat state, så en felstavad montering ger inga
 massnedladdningar.
 

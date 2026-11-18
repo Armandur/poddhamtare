@@ -2,8 +2,9 @@
 # Tre lägen:
 #   1. Argument givna -> run.py med dem, en gång (t.ex. 'retag' eller 'retag --apply')
 #   2. RUN_ONCE=true  -> 'hamta' en gång
-#   3. annars         -> 'schema', kör 'hamta' enligt CRON_SCHEDULE
-#                        (först 'retag' om RETAG_ON_START är satt)
+#   3. annars         -> webbgränssnittet på WEBUI_PORT (8000), som också kör
+#                        'hamta' enligt CRON_SCHEDULE (först 'retag' om
+#                        RETAG_ON_START är satt)
 set -euo pipefail
 
 PUID="${PUID:-99}"
@@ -31,4 +32,6 @@ case "${RETAG_ON_START:-}" in
     "")    ;;
     *)     echo "[entrypoint] Okänt RETAG_ON_START=$RETAG_ON_START, ignoreras" ;;
 esac
-exec gosu "$PUID:$PGID" python run.py schema
+# --no-access-log: inga klientadresser i containerloggen.
+exec gosu "$PUID:$PGID" uvicorn app.main:app --host 0.0.0.0 \
+    --port "${WEBUI_PORT:-8000}" --no-access-log

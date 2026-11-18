@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>poddhamtare</title>
+  <link rel="stylesheet" href="/static/style.css?v={{ static_v }}">
+</head>
+<body>
+  <header>
+    <h1><a href="/">poddhamtare</a></h1>
+    <span id="state" class="status"></span>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Kör nu</h2>
+      <p>Startar samma körning som schemat. Loggen visas direkt nedanför.</p>
+      <p class="muted" id="schedule-info"></p>
+      <form id="run-form" class="grid">
+        <label>Körning
+          <select name="kind">
+            <option value="hamta">Hämta nya avsnitt</option>
+            <option value="retag">Kontrollera gamla filer (bara torrkörning)</option>
+          </select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="dry_run">
+          Torrkörning (visa vad som skulle hända)
+        </label>
+        <div class="actions">
+          <button type="submit" id="run-btn">Kör</button>
+          <span id="run-status" class="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Livelogg</h2>
+      <div class="log-toolbar">
+        <button type="button" id="clear-btn" class="secondary">Rensa</button>
+        <label class="checkbox"><input type="checkbox" id="autoscroll" checked> Rulla med</label>
+      </div>
+      <pre id="log" aria-live="polite"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Körningshistorik</h2>
+      <p>Tryck på en körning för att se dess logg.</p>
+      <div id="runs"><p class="muted">Laddar...</p></div>
+    </section>
+
+    <section class="card">
+      <h2>Avsnitt</h2>
+      <div class="card-toolbar">
+        <input id="ep-search" type="search" placeholder="Sök på titel eller nummer">
+        <select id="ep-filter">
+          <option value="">Alla</option>
+          <option value="klar">Klara</option>
+          <option value="saknas">Saknas</option>
+          <option value="tagga">Taggas om</option>
+        </select>
+        <button type="button" id="ep-refresh" class="secondary">Uppdatera</button>
+        <span id="ep-meta" class="muted"></span>
+      </div>
+      <div id="episodes" aria-busy="true"><p class="muted">Läser flödet och mappen...</p></div>
+    </section>
+  </main>
+  <script src="/static/app.js?v={{ static_v }}" defer></script>
+</body>
+</html>

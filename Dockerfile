@@ -10,6 +10,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY hamtare/ ./hamtare/
+COPY app/ ./app/
 COPY run.py config.yaml entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
@@ -17,6 +18,8 @@ ENV TZ=Europe/Stockholm \
     PYTHONUNBUFFERED=1 \
     CONFIG_PATH=/state/config.yaml \
     STATE_DIR=/state \
-    CRON_SCHEDULE="30 */3 * * *"
+    CRON_SCHEDULE="30 */3 * * *" \
+    WEBUI_PORT=8000
 
+EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]

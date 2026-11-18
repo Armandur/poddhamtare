@@ -1,0 +1,123 @@
+/* poddhamtare webbgränssnitt. Samma utseende som kafferepet-dl: systemtypsnitt, mörkt tema. */
+:root {
+  color-scheme: dark;
+  --bg: #15171a;
+  --panel: #1e2126;
+  --row: #1a1d22;
+  --border: #2c2f35;
+  --fg: #e8eaed;
+  --muted: #9aa0a6;
+  --accent: #7ab7ff;
+  --btn: #2c5a8a;
+  --btn-hover: #3a6fa6;
+  --warn: #d9a02b;
+  --err: #d05050;
+  --mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--fg);
+  line-height: 1.4;
+}
+header {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+  padding: .75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+header h1 { font-size: 1.1rem; margin: 0; }
+header h1 a { color: var(--fg); text-decoration: none; }
+main { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+}
+.card h2 { margin: 0 0 .5rem; font-size: 1.05rem; color: var(--accent); }
+.card > p { color: var(--muted); margin: .25rem 0 1rem; }
+form.grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .75rem 1rem; align-items: end;
+}
+form.grid label {
+  display: flex; flex-direction: column; gap: .25rem; font-size: .85rem; color: var(--muted);
+}
+form.grid label.checkbox, label.checkbox { display: flex; flex-direction: row; align-items: center; gap: .5rem; font-size: .85rem; color: var(--muted); }
+input, select, button {
+  background: #2a2d33; color: var(--fg);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: .5rem .65rem; font: inherit;
+}
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); }
+button { background: var(--btn); border-color: var(--btn); cursor: pointer; font-weight: 500; }
+button:hover:not(:disabled) { background: var(--btn-hover); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.secondary { background: transparent; border-color: var(--border); color: var(--muted); }
+button.secondary:hover:not(:disabled) { background: var(--panel); color: var(--fg); }
+.actions { display: flex; align-items: center; gap: .75rem; }
+.status { color: var(--muted); font-size: .85rem; }
+.status.running { color: var(--warn); }
+.status.error { color: var(--err); }
+.muted { color: var(--muted); font-size: .85rem; }
+
+/* Avsnitt */
+.card-toolbar { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
+.card-toolbar input[type=search] { flex: 1 1 14rem; }
+.show-section h3 {
+  font-size: .95rem; color: var(--muted); margin: 1rem 0 .5rem;
+  border-bottom: 1px solid var(--border); padding-bottom: .3rem;
+}
+.show-section .alert { color: var(--warn); font-size: .85rem; margin: .25rem 0; }
+.ep-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
+.ep {
+  display: grid; grid-template-columns: 3.2rem 1fr auto; gap: .2rem .75rem; align-items: baseline;
+  background: var(--row); border: 1px solid var(--border); border-radius: 4px;
+  padding: .45rem .65rem; font-size: .85rem;
+}
+.ep-num { font-family: var(--mono); color: var(--accent); }
+.ep-title { overflow-wrap: anywhere; }
+.ep-meta { grid-column: 2 / 4; color: var(--muted); font-size: .75rem; }
+.ep-file { font-family: var(--mono); font-size: .68rem; color: var(--muted); grid-column: 2 / 4; overflow-wrap: anywhere; }
+.badge { padding: .1rem .45rem; border-radius: 3px; background: #2a2d33; font-size: .72rem; white-space: nowrap; }
+.badge.klar { background: #2a4a2a; color: #98d49a; }
+.badge.saknas { background: #4a3a2a; color: #d4a76a; }
+.badge.tagga { background: #2a3a4a; color: #9ac4e8; }
+.more { margin-top: .5rem; }
+
+/* Körningshistorik */
+.run { margin: .3rem 0; background: var(--row); border: 1px solid var(--border); border-radius: 4px; font-size: .82rem; }
+.run.failed { border-color: #6a2c2c; }
+.run summary { cursor: pointer; padding: .4rem .6rem; display: flex; flex-wrap: wrap; gap: .25rem .75rem; list-style: none; }
+.run summary::-webkit-details-marker { display: none; }
+.run summary::before { content: "▸"; color: var(--muted); }
+.run[open] summary::before { content: "▾"; }
+.run .when { font-family: var(--mono); }
+.run .what { color: var(--muted); }
+.run .result.err { color: var(--err); }
+.run .result.ok { color: #98d49a; }
+.run pre { margin: 0 .6rem .6rem; }
+
+/* Logg */
+.log-toolbar { display: flex; gap: 1rem; align-items: center; margin-bottom: .5rem; }
+.log-toolbar button { padding: .3rem .65rem; }
+pre.log, pre#log {
+  background: #0e1013; border: 1px solid var(--border); border-radius: 4px;
+  padding: .75rem 1rem; max-height: 60vh; overflow: auto;
+  font-family: var(--mono); font-size: .78rem; line-height: 1.5; margin: 0;
+  white-space: pre-wrap; word-break: break-word;
+}
+pre#log { min-height: 4rem; }
+.log .start, .log .end { color: var(--accent); }
+.log .err { color: var(--err); }
+.log .warn { color: var(--warn); }
+
+@media (max-width: 600px) {
+  header { padding: .65rem 1rem; }
+  main { margin: 1rem auto; padding: 0 .5rem; }
+  .card { padding: 1rem; }
+  .ep { grid-template-columns: 2.8rem 1fr; }
+  .ep .badge { grid-column: 2; justify-self: start; }
+  .ep-meta, .ep-file { grid-column: 2; }
+}
+pre#log:empty::before { content: "Ingen körning sedan containern startade. Äldre loggar finns i historiken."; color: var(--muted); }
